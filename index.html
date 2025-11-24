@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badminton Shd Bhd - 报名系统</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i data-lucide="activity" class="logo-icon"></i>
+                <span>Badminton <span class="highlight">Shd Bhd</span></span>
+            </div>
+            <button id="history-btn" class="icon-btn">
+                <i data-lucide="history"></i>
+            </button>
+        </header>
+
+        <!-- Main Content -->
+        <main>
+            <!-- Session Card -->
+            <section class="card session-card">
+                <div class="card-header">
+                    <span class="tag">本周球局</span>
+                    <span class="status-badge open">报名中</span>
+                </div>
+                <div class="session-info">
+                    <div class="info-item">
+                        <i data-lucide="calendar"></i>
+                        <span id="session-date">加载中...</span>
+                    </div>
+                    <div class="info-item">
+                        <i data-lucide="clock"></i>
+                        <span id="session-time-display">21:00 - 23:00</span>
+                    </div>
+
+                    <!-- Location & Map -->
+                    <div class="location-container">
+                        <a href="https://www.google.com/maps/search/?api=1&query=Impian Sport" target="_blank"
+                            class="info-item location-link" id="location-link">
+                            <i data-lucide="map-pin"></i>
+                            <span id="session-location-display">Impian Sport</span> <i data-lucide="external-link"
+                                class="icon-small"></i>
+                        </a>
+                        <div class="map-preview">
+                            <iframe id="map-iframe" width="100%" height="150" frameborder="0" scrolling="no"
+                                marginheight="0" marginwidth="0"
+                                src="https://maps.google.com/maps?q=Impian Sport&t=&z=15&ie=UTF8&iwloc=&output=embed">
+                            </iframe>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Stats -->
+            <section class="stats-grid">
+                <div class="stat-box">
+                    <span class="stat-label">已报名</span>
+                    <span class="stat-value" id="player-count">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">预计球场</span>
+                    <span class="stat-value highlight" id="court-count">0</span>
+                </div>
+            </section>
+
+            <!-- Registration -->
+            <section class="registration-section">
+                <h3>加入球局</h3>
+                <form id="join-form" class="join-form">
+                    <div class="input-group">
+                        <i data-lucide="user" class="input-icon"></i>
+                        <input type="text" id="player-name" placeholder="输入你的名字..." required>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <span>立即报名</span>
+                        <i data-lucide="arrow-right"></i>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Player List -->
+            <section class="player-list-section">
+                <h3>报名列表</h3>
+                <ul id="player-list" class="player-list">
+                    <!-- Players will be injected here -->
+                    <li class="empty-state">暂无报名，快来抢沙发！</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- Admin Footer -->
+    <footer class="footer">
+        <button id="admin-btn" class="text-btn">Admin Access</button>
+    </footer>
+
+    <!-- Admin Modal -->
+    <div id="admin-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>管理面板</h3>
+                <button id="close-modal" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+
+            <div id="admin-login-view">
+                <input type="password" id="admin-password" placeholder="输入管理员密码" class="admin-input">
+                <button id="login-submit" class="btn-primary full-width">登录</button>
+            </div>
+
+            <div id="admin-controls-view" class="hidden">
+                <div class="control-group">
+                    <label>活动时间</label>
+                    <input type="text" id="edit-time-input" placeholder="例如: 21:00 - 23:00" class="admin-input"
+                        value="21:00 - 23:00">
+                </div>
+                <div class="control-group">
+                    <label>球馆地点 (Google Maps 关键词)</label>
+                    <input type="text" id="edit-location-input" placeholder="例如: Impian Sport" class="admin-input"
+                        value="Impian Sport">
+                </div>
+                <button id="save-info-btn" class="btn-primary full-width" style="margin-bottom: 24px;">
+                    <i data-lucide="save"></i> 保存设置
+                </button>
+
+                <div class="control-group" style="border-top: 1px solid #334155; padding-top: 20px;">
+                    <label>本场球场号码</label>
+                    <input type="text" id="court-numbers-input" placeholder="例如: 5, 6, 7" class="admin-input">
+                </div>
+
+                <!-- Dynamic Action Button -->
+                <button id="end-session-btn" class="btn-danger full-width">
+                    <i data-lucide="archive"></i> 结束报名 & 归档
+                </button>
+                <button id="reopen-session-btn" class="btn-primary full-width hidden" style="margin-top: 12px;">
+                    <i data-lucide="refresh-cw"></i> 重新开启报名
+                </button>
+
+                <p id="admin-hint" class="hint-text">点击后将停止报名，并保存当前记录到历史档案。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>历史记录</h3>
+                <button id="close-history-modal" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+            <ul id="history-list" class="history-list">
+                <!-- History items injected here -->
+                <li class="empty-state">加载中...</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs (Compat version for file:// usage) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>
