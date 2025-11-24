@@ -147,6 +147,12 @@
                     <i data-lucide="refresh-cw"></i> 重新开启报名
                 </button>
 
+                <!-- Reset Button -->
+                <button id="reset-session-btn" class="btn-secondary full-width"
+                    style="margin-top: 24px; border-color: var(--danger); color: var(--danger);">
+                    <i data-lucide="rotate-ccw"></i> 重置/开启新的一周
+                </button>
+
                 <p id="admin-hint" class="hint-text">点击后将停止报名，并保存当前记录到历史档案。</p>
             </div>
         </div>
@@ -159,10 +165,69 @@
                 <h3>历史记录</h3>
                 <button id="close-history-modal" class="icon-btn"><i data-lucide="x"></i></button>
             </div>
+
+            <!-- Filter Controls (New Search Box) -->
+            <div class="filter-controls">
+                <input type="text" id="filter-search" class="filter-input" placeholder="🔍 搜索日期或场馆名称...">
+            </div>
+
             <ul id="history-list" class="history-list">
                 <!-- History items injected here -->
                 <li class="empty-state">加载中...</li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Edit Expense Modal -->
+    <div id="edit-expense-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑费用 - <span id="edit-expense-date"></span></h3>
+                <button id="close-edit-expense-modal" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+
+            <div class="expense-form">
+                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 16px;">
+                    参与者: <span id="edit-expense-player-count" style="color: var(--accent); font-weight: 600;"></span> 人
+                </p>
+
+                <div class="control-group">
+                    <label>订场费用 (RM)</label>
+                    <input type="number" id="edit-court-rental" placeholder="0" class="admin-input" step="0.01" min="0">
+                </div>
+
+                <div class="control-group">
+                    <label>使用球数</label>
+                    <input type="number" id="edit-shuttlecock-count" placeholder="0" class="admin-input" min="0">
+                </div>
+
+                <div class="control-group">
+                    <label>每粒球价格 (RM)</label>
+                    <input type="number" id="edit-shuttlecock-price" placeholder="0" class="admin-input" step="0.01"
+                        min="0">
+                </div>
+
+                <div id="edit-cost-summary"
+                    style="background: rgba(34, 197, 94, 0.1); padding: 12px; border-radius: 8px; margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span>总费用:</span>
+                        <span id="edit-total-cost" style="font-weight: 600;">RM 0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; color: var(--accent);">
+                        <span>人均费用:</span>
+                        <span id="edit-per-person-cost" style="font-weight: 700;">RM 0.00</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button id="save-expense-btn" class="btn-primary full-width">
+                        <i data-lucide="save"></i> 保存
+                    </button>
+                    <button id="cancel-expense-btn" class="btn-secondary full-width">
+                        取消
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
