@@ -124,6 +124,20 @@ function formatTime(timestamp) {
 
 // Expose delete function to window so onclick works
 window.deletePlayer = async function (id) {
+    // 1. Check Auth
+    if (!isAdminAuthenticated) {
+        // Set pending action to call deletePlayer again with the same ID
+        pendingLoginAction = () => window.deletePlayer(id);
+
+        // Open Admin Login Modal
+        adminModal.classList.remove('hidden');
+        adminLoginView.classList.remove('hidden');
+        adminControlsView.classList.add('hidden');
+        adminPasswordInput.value = '';
+        return; // Stop execution here
+    }
+
+    // 2. Proceed if Authenticated
     if (!confirm("确定要取消报名吗？")) return;
 
     try {
