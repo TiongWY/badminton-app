@@ -4,23 +4,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badminton Shd Bhd - 报名系统</title>
-
-    <!-- Icons -->
-    <link rel="icon" type="image/png" href="favicon.png">
-    <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- Styles -->
+    <title>Badminton Session</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
     <div id="app">
-        <!-- Header -->
         <header class="header">
             <div class="logo">
-                <i data-lucide="activity" class="logo-icon"></i>
-                <span>Badminton <span class="highlight">Shd Bhd</span></span>
+                <i data-lucide="feather" class="logo-icon"></i>
+                <span>Badminton<span class="highlight">Hub</span></span>
             </div>
             <button id="history-btn" class="icon-btn">
                 <i data-lucide="history"></i>
@@ -99,12 +100,12 @@
                 </ul>
             </section>
         </main>
-    </div>
 
-    <!-- Admin Footer -->
-    <footer class="footer">
-        <button id="admin-btn" class="text-btn">Admin Access</button>
-    </footer>
+        <!-- Admin Footer -->
+        <footer class="footer">
+            <button id="admin-btn" class="text-btn">Admin Access</button>
+        </footer>
+    </div>
 
     <!-- Admin Modal -->
     <div id="admin-modal" class="modal hidden">
@@ -237,6 +238,17 @@
 
     <!-- App Logic -->
     <script src="app.js"></script>
+
+    <!-- PWA Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed: ', err));
+            });
+        }
+    </script>
 </body>
 
 </html>
