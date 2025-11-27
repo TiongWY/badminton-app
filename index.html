@@ -13,96 +13,92 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
     <div id="app">
-        <header class="header">
+        <header class="session-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <div class="logo">
                 <i data-lucide="feather" class="logo-icon"></i>
                 <span>Badminton<span class="highlight">Hub</span></span>
             </div>
-            <button id="history-btn" class="icon-btn">
+            <button id="history-btn" class="icon-btn" title="History">
                 <i data-lucide="history"></i>
             </button>
         </header>
 
-        <!-- Main Content -->
-        <main>
-            <!-- Session Card -->
-            <section class="card session-card">
-                <div class="card-header">
-                    <span class="tag">本周球局</span>
-                    <span class="status-badge open">报名中</span>
+        <section class="session-details card">
+            <div class="card-header">
+                <span class="tag">本周球局</span>
+                <span class="status-badge open">报名中</span>
+            </div>
+            <div class="session-info">
+                <div class="info-item">
+                    <i data-lucide="calendar"></i>
+                    <span id="session-date">加载中...</span>
                 </div>
-                <div class="session-info">
-                    <div class="info-item">
-                        <i data-lucide="calendar"></i>
-                        <span id="session-date">加载中...</span>
-                    </div>
-                    <div class="info-item">
-                        <i data-lucide="clock"></i>
-                        <span id="session-time-display">21:00 - 23:00</span>
-                    </div>
+                <div class="info-item">
+                    <i data-lucide="clock"></i>
+                    <span id="session-time-display">21:00 - 23:00</span>
+                </div>
 
-                    <!-- Location & Map -->
-                    <div class="location-container">
-                        <a href="https://www.google.com/maps/search/?api=1&query=Impian Sport" target="_blank"
-                            class="info-item location-link" id="location-link">
-                            <i data-lucide="map-pin"></i>
-                            <span id="session-location-display">Impian Sport</span> <i data-lucide="external-link"
-                                class="icon-small"></i>
-                        </a>
-                        <div class="map-preview">
-                            <iframe id="map-iframe" width="100%" height="150" frameborder="0" scrolling="no"
-                                marginheight="0" marginwidth="0"
-                                src="https://maps.google.com/maps?q=Impian Sport&t=&z=15&ie=UTF8&iwloc=&output=embed">
-                            </iframe>
-                        </div>
+                <!-- Location & Map -->
+                <div class="location-container">
+                    <a href="https://www.google.com/maps/search/?api=1&query=Impian Sport" target="_blank"
+                        class="info-item location-link" id="location-link">
+                        <i data-lucide="map-pin"></i>
+                        <span id="session-location-display">Impian Sport</span> <i data-lucide="external-link"
+                            class="icon-small"></i>
+                    </a>
+                    <div class="map-preview">
+                        <iframe id="map-iframe" width="100%" height="150" frameborder="0" scrolling="no"
+                            marginheight="0" marginwidth="0"
+                            src="https://maps.google.com/maps?q=Impian Sport&t=&z=15&ie=UTF8&iwloc=&output=embed">
+                        </iframe>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Stats -->
-            <section class="stats-grid">
-                <div class="stat-box">
-                    <span class="stat-label">已报名</span>
-                    <span class="stat-value" id="player-count">0</span>
+        <!-- Stats -->
+        <section class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-label">已报名</span>
+                <span class="stat-value" id="player-count">0</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">预计球场</span>
+                <span class="stat-value highlight" id="court-count">0</span>
+            </div>
+        </section>
+
+        <!-- Registration -->
+        <section class="registration-section">
+            <h3>加入球局</h3>
+            <form id="join-form" class="join-form">
+                <div class="input-group">
+                    <i data-lucide="user" class="input-icon"></i>
+                    <input type="text" id="player-name" placeholder="输入你的名字..." required>
                 </div>
-                <div class="stat-box">
-                    <span class="stat-label">预计球场</span>
-                    <span class="stat-value highlight" id="court-count">0</span>
-                </div>
-            </section>
+                <button type="submit" class="btn-primary">
+                    <span>立即报名</span>
+                    <i data-lucide="arrow-right"></i>
+                </button>
+            </form>
+        </section>
 
-            <!-- Registration -->
-            <section class="registration-section">
-                <h3>加入球局</h3>
-                <form id="join-form" class="join-form">
-                    <div class="input-group">
-                        <i data-lucide="user" class="input-icon"></i>
-                        <input type="text" id="player-name" placeholder="输入你的名字..." required>
-                    </div>
-                    <button type="submit" class="btn-primary">
-                        <span>立即报名</span>
-                        <i data-lucide="arrow-right"></i>
-                    </button>
-                </form>
-            </section>
-
-            <!-- Player List -->
-            <section class="player-list-section">
-                <h3>报名列表</h3>
-                <ul id="player-list" class="player-list">
-                    <!-- Players will be injected here -->
-                    <li class="empty-state">暂无报名，快来抢沙发！</li>
-                </ul>
-            </section>
-        </main>
+        <!-- Player List -->
+        <section class="player-list-section">
+            <h3>报名列表</h3>
+            <ul id="player-list" class="player-list">
+                <!-- Players will be injected here -->
+                <li class="empty-state">暂无报名，快来抢沙发！</li>
+            </ul>
+        </section>
 
         <!-- Admin Footer -->
-        <footer class="footer">
+        <footer class="footer" style="margin-top: auto; padding-top: 20px; text-align: center;">
             <button id="admin-btn" class="text-btn">Admin Access</button>
         </footer>
     </div>
@@ -231,6 +227,71 @@
             </div>
         </div>
     </div>
+
+    <!-- Floating Action Button -->
+    <button id="fab-btn" class="fab-btn">
+        <i data-lucide="message-circle"></i>
+    </button>
+
+    <!-- Chat Dialog -->
+    <div id="chat-dialog" class="chat-dialog hidden">
+        <!-- Welcome View -->
+        <div id="chat-welcome-view" class="chat-view">
+            <div class="welcome-header">
+                <div class="welcome-icon">
+                    <i data-lucide="bot"></i>
+                </div>
+                <h2>Welcome</h2>
+                <p>How can I help you?</p>
+            </div>
+            <div class="welcome-body">
+                <p>Start a conversation with your AI Badminton Coach now!</p>
+                <button id="start-chat-btn" class="btn-primary full-width">
+                    Start a Conversation
+                </button>
+            </div>
+            <button id="close-welcome-btn" class="icon-btn close-absolute"><i data-lucide="x"></i></button>
+        </div>
+
+        <!-- Chat Interface View (Initially Hidden) -->
+        <div id="chat-interface-view" class="chat-view hidden"
+            style="height: 100%; display: flex; flex-direction: column;">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <i data-lucide="bot" style="color: var(--accent);"></i>
+                    <span>AI 羽球教练</span>
+                </div>
+                <button id="close-chat-btn" class="icon-btn"><i data-lucide="x"></i></button>
+            </div>
+
+            <div id="chat-messages" class="chat-messages">
+                <div class="chat-message bot">
+                    <div class="message-content">
+                        你好！我是你的 AI 羽球教练。有什么可以帮你的吗？你可以问我技术问题，或者上传照片让我分析动作。
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <div id="chat-image-preview" class="hidden"></div>
+                <div class="input-row">
+                    <label for="chat-image-input" class="icon-btn" style="cursor: pointer;">
+                        <i data-lucide="image"></i>
+                    </label>
+                    <input type="file" id="chat-image-input" accept="image/*" class="hidden">
+
+                    <textarea id="chat-input" placeholder="输入问题..." rows="1"></textarea>
+
+                    <button id="send-btn" class="icon-btn send-btn">
+                        <i data-lucide="send"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Firebase SDKs (Compat version for file:// usage) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>

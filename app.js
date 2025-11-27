@@ -16,20 +16,49 @@ const firebaseConfig = {
 // Initialize Firebase (Compat Mode)
 let db;
 let players = [];
+let GEMINI_API_KEY = ''; // 将从Firebase获取
 const STORAGE_KEY = 'badminton_players_demo';
 
-try {
-    if (typeof firebase !== 'undefined') {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        console.log("Firebase initialized successfully (Compat Mode)");
-    } else {
-        throw new Error("Firebase SDK not loaded");
+// 从Firebase获取API密钥
+async function loadAPIKeys() {
+    try {
+        const configDoc = await db.collection('config').doc('apiKeys').get();
+        if (configDoc.exists) {
+            const data = configDoc.data();
+            GEMINI_API_KEY = data.geminiKey || '';
+            console.log('✅ API密钥已从Firebase加载');
+        } else {
+            console.warn('⚠️ Firebase中未找到API密钥配置');
+        }
+    } catch (error) {
+        console.error('❌ 加载API密钥失败:', error);
     }
-} catch (error) {
-    console.warn("Firebase config missing or SDK failed. Using LocalStorage fallback.", error);
-    players = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 }
+
+// 初始化应用
+async function initializeApp() {
+    try {
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase initialized successfully (Compat Mode)");
+
+            // 从Firebase加载API密钥
+            await loadAPIKeys();
+
+            // 加载玩家数据
+            await loadPlayers();
+        } else {
+            throw new Error("Firebase SDK not loaded");
+        }
+    } catch (error) {
+        console.warn("Firebase config missing or SDK failed. Using LocalStorage fallback.", error);
+        players = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+    }
+}
+
+// 启动应用
+initializeApp();
 
 // --- DOM Elements ---
 const playerListEl = document.getElementById('player-list');
@@ -804,18 +833,375 @@ if (saveExpenseBtn) {
                 await db.collection("history").doc(currentEditingSessionId).update({
                     expenses: expenseData
                 });
-                alert("费用已保存！");
+
+                alert("费用已更新！");
                 editExpenseModal.classList.add('hidden');
-                // 刷新历史列表
-                historyBtn.click();
+
+                // Refresh history list if open
+                if (!historyModal.classList.contains('hidden')) {
+                    historyBtn.click();
+                }
             }
         } catch (error) {
-            console.error("Error saving expenses: ", error);
+            console.error("Error saving expense: ", error);
             alert("保存失败: " + error.message);
         } finally {
             saveExpenseBtn.disabled = false;
             saveExpenseBtn.innerHTML = '<i data-lucide="save"></i> 保存';
             lucide.createIcons();
+        }
+    });
+}
+
+function applySearch() {
+    const keyword = filterSearch.value.toLowerCase().trim();
+
+    if (!keyword) {
+        // 没有关键字，显示全部
+        renderHistoryList(allHistoryData);
+        return;
+    }
+
+    // 根据关键字筛选
+    const filtered = allHistoryData.filter(item => {
+        const data = item.data;
+        // 搜索日期、场馆名称
+        return data.date.toLowerCase().includes(keyword) ||
+            data.location.toLowerCase().includes(keyword);
+    });
+
+    renderHistoryList(filtered);
+}
+
+if (historyBtn) {
+    historyBtn.addEventListener('click', async () => {
+        historyModal.classList.remove('hidden');
+        historyListEl.innerHTML = '<li class="empty-state">加载中...</li>';
+
+        try {
+            if (db) {
+                const snapshot = await db.collection("history").orderBy("archivedAt", "desc").get();
+
+                if (snapshot.empty) {
+                    historyListEl.innerHTML = '<li class="empty-state">暂无历史记录</li>';
+                    allHistoryData = [];
+                    return;
+                }
+
+                // 存储所有数据
+                allHistoryData = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allHistoryData.push({ doc, data });
+                });
+
+                // 清空搜索框
+                if (filterSearch) filterSearch.value = '';
+
+                // 渲染所有记录
+                renderHistoryList(allHistoryData);
+            }
+        } catch (error) {
+            console.error("Error fetching history: ", error);
+            historyListEl.innerHTML = '<li class="empty-state">加载失败</li>';
+        }
+    });
+}
+
+// 搜索框事件监听
+if (filterSearch) {
+    filterSearch.addEventListener('input', applySearch);
+}
+
+if (closeHistoryModalBtn) {
+    closeHistoryModalBtn.addEventListener('click', () => {
+        historyModal.classList.add('hidden');
+    });
+}
+
+// --- Expense Editing Logic ---
+
+function updateEditCostCalculation() {
+    const rental = parseFloat(editCourtRental.value) || 0;
+    const count = parseInt(editShuttlecockCount.value) || 0;
+    const price = parseFloat(editShuttlecockPrice.value) || 0;
+    const playerCount = parseInt(editExpensePlayerCount.textContent) || 1;
+
+    const totalCost = rental + (count * price);
+    const perPersonCost = totalCost / playerCount;
+
+    editTotalCost.textContent = `RM ${totalCost.toFixed(2)}`;
+    editPerPersonCost.textContent = `RM ${perPersonCost.toFixed(2)}`;
+}
+
+[editCourtRental, editShuttlecockCount, editShuttlecockPrice].forEach(input => {
+    if (input) input.addEventListener('input', updateEditCostCalculation);
+});
+
+function openEditExpenseModal(sessionId, sessionData) {
+    currentEditingSessionId = sessionId;
+
+    editExpenseDate.textContent = sessionData.date;
+    editExpensePlayerCount.textContent = sessionData.playerCount;
+
+    // 填充现有数据
+    if (sessionData.expenses) {
+        editCourtRental.value = sessionData.expenses.courtRental || '';
+        editShuttlecockCount.value = sessionData.expenses.shuttlecockCount || '';
+        editShuttlecockPrice.value = sessionData.expenses.shuttlecockPrice || '';
+        updateEditCostCalculation();
+    } else {
+        // 重置
+        editCourtRental.value = '';
+        editShuttlecockCount.value = '';
+        editShuttlecockPrice.value = '';
+        editTotalCost.textContent = 'RM 0.00';
+        editPerPersonCost.textContent = 'RM 0.00';
+    }
+
+    editExpenseModal.classList.remove('hidden');
+}
+
+if (closeEditExpenseModalBtn) {
+    closeEditExpenseModalBtn.addEventListener('click', () => {
+        editExpenseModal.classList.add('hidden');
+    });
+}
+
+if (cancelExpenseBtn) {
+    cancelExpenseBtn.addEventListener('click', () => {
+        editExpenseModal.classList.add('hidden');
+    });
+}
+
+if (saveExpenseBtn) {
+    saveExpenseBtn.addEventListener('click', async () => {
+        if (!currentEditingSessionId) return;
+
+        const rental = parseFloat(editCourtRental.value) || 0;
+        const count = parseInt(editShuttlecockCount.value) || 0;
+        const price = parseFloat(editShuttlecockPrice.value) || 0;
+        const playerCount = parseInt(editExpensePlayerCount.textContent) || 1;
+
+        const totalCost = rental + (count * price);
+        const perPersonCost = totalCost / playerCount;
+
+        const expenseData = {
+            courtRental: rental,
+            shuttlecockCount: count,
+            shuttlecockPrice: price,
+            totalCost: totalCost,
+            costPerPerson: perPersonCost
+        };
+
+        try {
+            saveExpenseBtn.disabled = true;
+            saveExpenseBtn.textContent = "保存中...";
+
+            if (db) {
+                await db.collection("history").doc(currentEditingSessionId).update({
+                    expenses: expenseData
+                });
+
+                alert("费用已更新！");
+                editExpenseModal.classList.add('hidden');
+
+                // Refresh history list if open
+                if (!historyModal.classList.contains('hidden')) {
+                    historyBtn.click();
+                }
+            }
+        } catch (error) {
+            console.error("Error saving expense: ", error);
+            alert("保存失败: " + error.message);
+        } finally {
+            saveExpenseBtn.disabled = false;
+            saveExpenseBtn.innerHTML = '<i data-lucide="save"></i> 保存';
+            lucide.createIcons();
+        }
+    });
+}
+
+// --- Floating Chat Logic ---
+
+const fabBtn = document.getElementById('fab-btn');
+const chatDialog = document.getElementById('chat-dialog');
+const closeChatBtn = document.getElementById('close-chat-btn');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const chatMessages = document.getElementById('chat-messages');
+const chatImageInput = document.getElementById('chat-image-input');
+const chatImagePreview = document.getElementById('chat-image-preview');
+
+// New Elements for Welcome View
+const chatWelcomeView = document.getElementById('chat-welcome-view');
+const chatInterfaceView = document.getElementById('chat-interface-view');
+const startChatBtn = document.getElementById('start-chat-btn');
+const closeWelcomeBtn = document.getElementById('close-welcome-btn');
+
+// Toggle Chat
+function toggleChat() {
+    chatDialog.classList.toggle('hidden');
+    if (!chatDialog.classList.contains('hidden')) {
+        // If opening, check if we should show welcome or interface
+        // For now, let's persist state (don't reset)
+        // But if it's the first time, welcome view is default (in HTML)
+
+        if (!chatInterfaceView.classList.contains('hidden')) {
+            chatInput.focus();
+            scrollToBottom();
+        }
+    }
+}
+
+if (fabBtn) fabBtn.addEventListener('click', toggleChat);
+if (closeChatBtn) closeChatBtn.addEventListener('click', toggleChat);
+if (closeWelcomeBtn) closeWelcomeBtn.addEventListener('click', toggleChat);
+
+if (startChatBtn) {
+    startChatBtn.addEventListener('click', () => {
+        chatWelcomeView.classList.add('hidden');
+        chatInterfaceView.classList.remove('hidden');
+        chatInput.focus();
+        scrollToBottom();
+    });
+}
+
+// Image Preview
+if (chatImageInput) {
+    chatImageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                chatImagePreview.innerHTML = `
+                    <div style="position: relative; display: inline-block;">
+                        <img src="${e.target.result}" alt="Preview">
+                        <button onclick="clearImage()" style="position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer;">&times;</button>
+                    </div>
+                `;
+                chatImagePreview.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+window.clearImage = function () {
+    chatImageInput.value = '';
+    chatImagePreview.innerHTML = '';
+    chatImagePreview.classList.add('hidden');
+}
+
+// Append Message
+function appendMessage(text, type, imageUrl = null) {
+    const div = document.createElement('div');
+    div.className = `chat-message ${type}`;
+
+    let content = `<div class="message-content">${text}</div>`;
+    if (imageUrl) {
+        content += `<img src="${imageUrl}" alt="Uploaded Image">`;
+    }
+
+    div.innerHTML = content;
+    chatMessages.appendChild(div);
+    scrollToBottom();
+}
+
+function scrollToBottom() {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Handle Send
+async function handleSend() {
+    const text = chatInput.value.trim();
+    const file = chatImageInput.files[0];
+
+    if (!text && !file) return;
+
+    // 1. Show User Message
+    let imageUrl = null;
+    let base64Data = null;
+
+    if (file) {
+        base64Data = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+        });
+        imageUrl = base64Data; // For display
+        base64Data = base64Data.split(',')[1]; // For API (remove prefix)
+    }
+
+    appendMessage(text, 'user', imageUrl);
+
+    // Clear Input
+    chatInput.value = '';
+    clearImage();
+
+    // 2. Show Loading
+    const loadingId = 'loading-' + Date.now();
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'chat-message bot';
+    loadingDiv.id = loadingId;
+    loadingDiv.innerHTML = `<div class="message-content"><span class="chat-spinner"></span>思考中...</div>`;
+    chatMessages.appendChild(loadingDiv);
+    scrollToBottom();
+
+    // 3. Call API
+    try {
+        const parts = [];
+        if (text) parts.push({ text: text });
+        else parts.push({ text: "请分析这张图片" });
+
+        if (base64Data) {
+            parts.push({
+                inline_data: {
+                    mime_type: file.type,
+                    data: base64Data
+                }
+            });
+        }
+
+        // 检查API密钥是否已加载
+        if (!GEMINI_API_KEY) {
+            throw new Error('API密钥未加载，请稍后再试');
+        }
+
+        const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + GEMINI_API_KEY, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: parts }] })
+        });
+
+        const data = await response.json();
+
+        // Remove Loading
+        document.getElementById(loadingId).remove();
+
+        if (!response.ok) {
+            throw new Error(data.error?.message || 'API Request Failed');
+        }
+
+        const aiText = data.candidates[0].content.parts[0].text;
+        appendMessage(aiText, 'bot');
+
+    } catch (error) {
+        document.getElementById(loadingId)?.remove();
+        appendMessage("抱歉，我遇到了一些问题: " + error.message, 'bot');
+        console.error(error);
+    }
+}
+
+if (sendBtn) {
+    sendBtn.addEventListener('click', handleSend);
+}
+
+if (chatInput) {
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSend();
         }
     });
 }
