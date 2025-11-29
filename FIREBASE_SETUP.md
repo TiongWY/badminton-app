@@ -24,7 +24,7 @@ apiKeys
 
 | 字段名 | 类型 | 值 |
 |--------|------|-----|
-| `geminiKey` | string | `AIzaSyBcNOW2h_tUmIMYjkTRuCfFJRjQ9iiTHQQ` |
+| `geminiKey` | string |  |
 
 ## 步骤3：设置Firestore安全规则
 
@@ -97,3 +97,4 @@ service cloud.firestore {
 ## 完成！
 
 配置完成后，您的应用将自动从Firebase加载API密钥，用户无需任何配置即可使用聊天功能。
+
